@@ -5,6 +5,7 @@ const cors = require("cors");
 const NotFoundError = require("./errors/not-found");
 const userRouter = require("./api/users/users.router");
 const usersController = require("./api/users/users.controller");
+const articlesController = require("./api/users/articles.controller");
 const authMiddleware = require("./middlewares/auth");
 require("./api/articles/articles.schema"); // temporaire
 const app = express();

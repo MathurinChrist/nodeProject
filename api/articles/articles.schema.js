@@ -1,25 +1,33 @@
 const { Schema, model } = require("mongoose");
 
-const articleSchema = Schema({
-  title: String,
-  content: String,
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
+const articleSchema = new Schema(
+  {
+    title: {
+      type: String,
+      required: [true, "Le titre est obligatoire"],
+      trim: true,
+      minlength: [3, "Le titre doit contenir au moins 3 caractères"],
+    },
+    content: {
+      type: String,
+      required: [true, "Le contenu est obligatoire"],
+      minlength: [10, "Le contenu doit contenir au moins 10 caractères"],
+    },
+    status: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "draft",
+      required: true,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
-});
+  {
+    timestamps: true, // timestamp pour les propriété createdAt et updatedAt de manière automatique
+  }
+);
 
-let Article;
-
-module.exports = Article = model("Article", articleSchema);
-
-/*async function test() {
-  const articles = await Article.find().populate({
-    path: "user",
-    select: "-password",
-    match: { name: /ben/i },
-  });
-  console.log(articles.filter((article) => article.user));
-}
-
-test();*/
+module.exports = model("Article", articleSchema);

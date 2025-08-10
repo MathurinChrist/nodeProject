@@ -29,6 +29,10 @@ class UserService {
     }
     return user._id;
   }
+
+  async (id)  {
+  return  db.User.findByPk(id); // Exemple avec Sequelize
+};
 }
 
 module.exports = new UserService();

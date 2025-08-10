@@ -73,6 +73,31 @@ class UsersController {
       next(err);
     }
   }
+  async getUserArticles(req, res) {
+    try {
+      const { userId } = req.params;
+      const articles = await articleService.getArticlesByUser(userId);
+      res.json(articles);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
 }
+const userService = require('./users.service');
+
+exports.me = async (req, res) => {
+  try {
+    const userId = req.user; // l'identifiant injecté par le middleware d'authentification
+    const user = await userService.get(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé." });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
 
 module.exports = new UsersController();
