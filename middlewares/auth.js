@@ -1,17 +1,18 @@
-const UnauthorizedError = require("../errors/unauthorized");
-const jwt = require("jsonwebtoken");
-const config = require("../config");
+const jwt = require('jsonwebtoken');
+const config = require('../config'); // où tu as ta clé secrète
 
 module.exports = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: 'Token manquant' });
+
+  const token = authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'Token manquant' });
+
   try {
-    const token = req.headers["x-access-token"];
-    if (!token) {
-      throw "not token";
-    }
     const decoded = jwt.verify(token, config.secretJwtToken);
-    req.user = decoded;
+    req.user = { userId: decoded.userId };  // Important : on met userId dans req.user
     next();
-  } catch (message) {
-    next(new UnauthorizedError(message));
+  } catch (error) {
+    return res.status(401).json({ message: 'Token invalide' });
   }
 };
