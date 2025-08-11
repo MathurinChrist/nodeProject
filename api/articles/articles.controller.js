@@ -1,55 +1,56 @@
-const articleService = require("./articles.service");
+const Article = require("../articles/articles.schema");
 
-class ArticleController {
-  async create(req, res) {
-    try {
-      const data = req.body;
-      data.user = req.user._id; 
-      const article = await articleService.createArticle(data);
-
-      req.app.get("io").emit("articleCreated", article);
-
-      res.status(201).json(article);
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
+exports.createArticle = async (req, res) => {
+  try {
+    const article = new Article({ ...req.body, user: req.user.userId });
+    await article.save();
+    res.status(201).json(article);
+  } catch (error) {
+    console.log("Erreur POST /articles:", error.message);
+    res.status(400).json({ message: error.message });
   }
+};
 
-  async update(req, res) {
-    try {
-      if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Accès refusé" });
-      }
-      const updatedArticle = await articleService.updateArticle(req.params.id, req.body);
-      if (!updatedArticle) {
-        return res.status(404).json({ message: "Article non trouvé" });
-      }
-
-      req.app.get("io").emit("articleUpdated", updatedArticle);
-
-      res.json(updatedArticle);
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
+exports.getPublishedArticles = async (req, res) => {
+  try {
+    const articles = await Article.find({ status: "published" });
+    res.status(200).json(articles);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
+};
 
-  async delete(req, res) {
-    try {
-      if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Accès refusé" });
-      }
-      const deletedArticle = await articleService.deleteArticle(req.params.id);
-      if (!deletedArticle) {
-        return res.status(404).json({ message: "Article non trouvé" });
-      }
-
-      req.app.get("io").emit("articleDeleted", deletedArticle);
-
-      res.json({ message: "Article supprimé" });
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
+exports.getArticleById = async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ message: "Article non trouvé" });
+    res.status(200).json(article);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-}
+};
 
-module.exports = new ArticleController();
+exports.updateArticle = async (req, res) => {
+  try {
+    const article = await Article.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!article) return res.status(404).json({ message: "Article non trouvé" });
+    res.status(200).json(article);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Supprimer un article
+exports.deleteArticle = async (req, res) => {
+  try {
+    const article = await Article.findByIdAndDelete(req.params.id);
+    if (!article) return res.status(404).json({ message: "Article non trouvé" });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
