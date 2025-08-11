@@ -3,6 +3,7 @@ const UnauthorizedError = require("../../errors/unauthorized");
 const jwt = require("jsonwebtoken");
 const config = require("../../config");
 const usersService = require("./users.service");
+const articleService = require("../articles/articles.service"); 
 
 class UsersController {
   async getAll(req, res, next) {
@@ -82,22 +83,20 @@ class UsersController {
       res.status(500).json({ message: err.message });
     }
   }
-}
-const userService = require('./users.service');
+  async me(req, res) {
+    try {
+      const userId = req.user;
+      const user = await usersService.get(userId);
 
-exports.me = async (req, res) => {
-  try {
-    const userId = req.user; // l'identifiant injecté par le middleware d'authentification
-    const user = await userService.get(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utilisateur non trouvé." });
+      }
 
-    if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé." });
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Erreur serveur", error: error.message });
     }
-
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
-};
+}
 
 module.exports = new UsersController();
