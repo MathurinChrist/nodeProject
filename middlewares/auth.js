@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const config = require('../config'); // où tu as ta clé secrète
+const config = require('../config'); 
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -10,9 +10,10 @@ module.exports = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, config.secretJwtToken);
-    req.user = { userId: decoded.userId };  // Important : on met userId dans req.user
+    req.user = { userId: decoded.userId };  
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Token invalide' });
   }
 };
+
