@@ -1,24 +1,28 @@
-const Article = require("./articles.schema");
+const Article = require("../articles/articles.schema");
 
-class ArticleService {
-    async getArticlesByUser(userId) {
-        return await Article.find({ user: userId }).populate({
-            path: "user",
-            select: "-password -__v -createdAt -updatedAt"
-        });
-    }
-  async createArticle(data) {
-    const article = new Article(data);
-    return await article.save();
-  }
+exports.createArticle = async (data, userId) => {
+  const article = new Article({ ...data, user: userId });
+  return article.save();
+};
 
-  async updateArticle(id, data) {
-    return await Article.findByIdAndUpdate(id, data, { new: true });
-  }
+exports.getArticles = async () => {
+  return Article.find({ status: "published" }).populate("user", "username");
+};
 
-  async deleteArticle(id) {
-    return await Article.findByIdAndDelete(id);
-  }
-}
+exports.getArticleById = async (id) => {
+  return Article.findById(id).populate("user", "username");
+};
 
-module.exports = new ArticleService();
+exports.updateArticle = async (id, data, userId) => {
+  // On ne permet que le propriétaire de modifier
+  const article = await Article.findOne({ _id: id, user: userId });
+  if (!article) return null;
+
+  Object.assign(article, data);
+  return article.save();
+};
+
+exports.deleteArticle = async (id, userId) => {
+  const article = await Article.findOneAndDelete({ _id: id, user: userId });
+  return !!article;
+};
